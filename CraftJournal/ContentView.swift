@@ -1,86 +1,71 @@
-//
-//  ContentView.swift
-//  CraftJournal
-//
-//  Created by iMac16 on 9/28/26.
-//
-
 import SwiftUI
 import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-
+    
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(keyPath: \CraftEntry.date, ascending: false)],
         animation: .default)
-    private var items: FetchedResults<Item>
-
+    private var entries: FetchedResults<CraftEntry>
+    
+    @State private var showingAddEntry = false
+    
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
-                ForEach(items) { item in
+                ForEach(entries) { entry in
                     NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
+                        EntryDetailView(entry: entry)
                     } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+                        EntryRow(entry: entry)
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteEntries)
             }
+            .navigationTitle("Craft Journal")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showingAddEntry = true
+                    } label: {
+                        Label("Add", systemImage: "plus")
                     }
                 }
             }
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            .sheet(isPresented: $showingAddEntry) {
+                AddEntryView()
+                    .environment(\.managedObjectContext, viewContext)
             }
         }
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+    
+    private func deleteEntries(offsets: IndexSet) {
+        offsets.map { entries[$0] }.forEach(viewContext.delete)
+        do {
+            try viewContext.save()
+        } catch {
+            print("Could not delete: \(error)")
         }
     }
 }
 
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
+struct EntryRow: View {
+    @ObservedObject var entry: CraftEntry
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text(entry.title ?? "Untitled")
+                .font(.headline)
+            Text(entry.craftType ?? "")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView()
+        .environment(\.managedObjectContext,
+PersistenceController.preview.container.viewContext)
 }
