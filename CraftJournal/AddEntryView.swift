@@ -7,6 +7,7 @@ struct AddEntryView: View {
     
     @State private var title = ""
     @State private var craftType = crafts[0]
+    @State private var notes = ""
     
     var body: some View {
         NavigationStack {
@@ -17,6 +18,8 @@ struct AddEntryView: View {
                         Text(craft)
                     }
                 }
+                
+                TextField("Notes", text: $notes, axis: .vertical)
             }
             .navigationTitle("New Entry")
             .toolbar {
@@ -37,6 +40,8 @@ struct AddEntryView: View {
         entry.title = title
         entry.craftType = craftType
         entry.date = Date()
+        entry.notes = notes
+        
         do {
             try viewContext.save()
             dismiss()

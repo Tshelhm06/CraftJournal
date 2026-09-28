@@ -14,6 +14,11 @@ struct EntryDetailView: View {
                 if let date = entry.date {
                     Text(date, style: .date)
                 }
+                Text("Notes")
+                    .font(.headline)
+
+                Text(entry.notes ?? "No notes added.")
+                    .font(.body)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
