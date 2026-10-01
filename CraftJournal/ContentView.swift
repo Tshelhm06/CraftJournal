@@ -54,12 +54,32 @@ struct EntryRow: View {
     @ObservedObject var entry: CraftEntry
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(entry.title ?? "Untitled")
-                .font(.headline)
-            Text(entry.craftType ?? "")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack {
+            if let data = entry.photo,
+               let uiImage = UIImage(data: data) {
+                
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 8)
+                    )
+                
+            } else {
+                Image(systemName: "photo")
+                    .frame(width: 60, height: 60)
+                    .foregroundStyle(.secondary)
+            }
+            
+            VStack(alignment: .leading) {
+                Text(entry.title ?? "Untitled")
+                    .font(.headline)
+                
+                Text(entry.craftType ?? "")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }
