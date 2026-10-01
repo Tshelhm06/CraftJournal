@@ -17,7 +17,29 @@ struct ContentView: View {
     
     @State private var showingAddEntry = false
     
+    // Selected craft type filter
     @State private var selectedCraftType = "All"
+    
+    // Search text
+    @State private var searchText = ""
+    
+    // Craft types for the filter menu
+    let craftTypes = [
+        "All",
+        "Thagzo",
+        "Shagzo",
+        "Parzo",
+        "Jimzo",
+        "Lhazo",
+        "Dozo",
+        "Garzo",
+        "Troezo",
+        "Dezo",
+        "Jinzo",
+        "Lugzo",
+        "Shingzo",
+        "Tsharzo"
+    ]
     
     var body: some View {
         NavigationStack {
@@ -44,8 +66,22 @@ struct ContentView: View {
                     
                 } else {
                     
+                    // Craft type filter
+                    Picker(
+                        "Craft Type",
+                        selection: $selectedCraftType
+                    ) {
+                        ForEach(craftTypes, id: \.self) { type in
+                            Text(type)
+                                .tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .padding(.horizontal)
+                    
+                    // Entry list
                     List {
-                        ForEach(entries) { entry in
+                        ForEach(filteredEntries) { entry in
                             NavigationLink {
                                 EntryDetailView(entry: entry)
                             } label: {
@@ -54,6 +90,11 @@ struct ContentView: View {
                         }
                         .onDelete(perform: deleteEntries)
                     }
+                    // Search by title
+                    .searchable(
+                        text: $searchText,
+                        prompt: "Search by title"
+                    )
                 }
             }
             .navigationTitle("Craft Journal")
@@ -74,6 +115,27 @@ struct ContentView: View {
                         viewContext
                     )
             }
+        }
+    }
+    
+    // Filter entries by craft type AND search text
+    private var filteredEntries: [CraftEntry] {
+        
+        return entries.filter { entry in
+            
+            // Check craft type
+            let matchesCraftType =
+                selectedCraftType == "All" ||
+                entry.craftType == selectedCraftType
+            
+            // Check title
+            let matchesSearch =
+                searchText.isEmpty ||
+                (entry.title ?? "")
+                    .localizedCaseInsensitiveContains(searchText)
+            
+            // Entry must satisfy both conditions
+            return matchesCraftType && matchesSearch
         }
     }
     
